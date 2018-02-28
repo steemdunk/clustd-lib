@@ -1,0 +1,33 @@
+{
+  "name": "clustd-lib",
+  "version": "0.0.1",
+  "description": "Cluster daemon library",
+  "repository": "https://github.com/steemdunk/clustd-lib",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "gulp build"
+  },
+  "author": "Samuel Grenier",
+  "license": "MIT",
+  "dependencies": {
+    "debug": "^3.1.0",
+    "ws": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/debug": "0.0.30",
+    "@types/node": "^9.4.6",
+    "@types/ws": "^4.0.1",
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-typescript": "^4.0.1",
+    "merge2": "^1.2.1",
+    "typescript": "^2.7.2"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^3.0.3",
+    "utf-8-validate": "^4.0.0"
+  }
+}

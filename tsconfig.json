@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "outDir": "lib",
+    "module": "commonjs",
+    "strict": true,
+    "noImplicitAny": false,
+    "declaration": true,
+    "lib": [
+      "es7",
+      "esnext"
+    ]
+  }
+}
