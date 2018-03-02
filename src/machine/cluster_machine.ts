@@ -11,7 +11,7 @@ export class ClusterMachine extends GenericMachine {
     super(localClient, host);
   }
 
-  async onRequest(method: string, params?: any[]): Promise<any> {
+  async onRequest(method: string, params?: any): Promise<any> {
     switch (method) {
       case 'get_master':
         let masterId: string|undefined;

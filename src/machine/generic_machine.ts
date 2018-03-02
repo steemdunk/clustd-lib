@@ -55,7 +55,7 @@ export abstract class GenericMachine extends EventEmitter {
     }
   }
 
-  abstract onRequest(method: string, params?: any[]): Promise<any>;
+  abstract onRequest(method: string, params?: any): Promise<any>;
 
   start(): void {
     if (this.active || this.local) return;
@@ -103,7 +103,7 @@ export abstract class GenericMachine extends EventEmitter {
     return true;
   }
 
-  async send(method: string, params?: any[]) {
+  async send(method: string, params?: any) {
     if (!this.open) {
       throw new Error('disconnected');
     }
@@ -142,13 +142,20 @@ export abstract class GenericMachine extends EventEmitter {
   async initClient(client: Client, clientOnlyConnect = false): Promise<void> {
     client.on('handshake_verify', data => {
       try {
-        // TODO allow ID renaming
-        if (this._id)
+        if (this._id) {
+          // TODO allow ID renaming
           assert(data.id === this._id, `id mismatch: ${this._id} -> ${data.id}`);
-        this._id = data.id;
-        this.host = data.remote_address;
-        assert(this._id, 'handshake missing id');
-        assert(this.host, 'handshake missing remote address');
+        }
+        {
+          this._id = data.id;
+          assert(this._id, 'handshake missing id');
+        }
+
+        if (!clientOnlyConnect) {
+          this.host = data.remote_address;
+          assert(this.host, 'handshake missing remote address');
+        }
+        this.lastPong = Date.now();
         if (this.setClient(client)) {
           this.logger.info('Successfully connected');
           client.emit('handshake_complete');
@@ -204,10 +211,11 @@ export abstract class GenericMachine extends EventEmitter {
     client.on('close', () => {
       if (this.client) {
         this.logger.warn('Connection lost');
+        const serverSocket = this.client.serverSocket;
         this.client = undefined;
         this.emit('close');
         if (!clientOnlyConnect
-            || (clientOnlyConnect && !this.client!.serverSocket)) {
+            || (clientOnlyConnect && !serverSocket)) {
           this.scheduleConnection();
         }
       }
