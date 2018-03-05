@@ -1,5 +1,6 @@
 import { GenericMachine } from './generic_machine';
 import { LocalClient } from '../client';
+import * as crypto from 'crypto';
 import * as assert from 'assert';
 
 export interface DriverClient {
@@ -11,8 +12,11 @@ export abstract class DriverMachine extends GenericMachine {
 
   readonly type = 'driver';
 
-  constructor(dc: DriverClient, host: string) {
+  constructor(dc: DriverClient, host: string, autoGenId = true) {
     super(dc as LocalClient, host);
+    if (autoGenId) {
+      dc.id += '-' + crypto.randomBytes(4).readUInt32BE(0).toString()
+    }
     assert(host, 'host must be provided in a driver');
   }
 
