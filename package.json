@@ -2,6 +2,8 @@
   "name": "clustd-lib",
   "version": "0.0.1",
   "description": "Cluster daemon library",
+  "author": "Samuel Grenier",
+  "license": "MIT",
   "repository": "https://github.com/steemdunk/clustd-lib",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -9,8 +11,12 @@
     "prepare": "npm run build",
     "build": "gulp build"
   },
-  "author": "Samuel Grenier",
-  "license": "MIT",
+  "files": [
+    "tsconfig.json",
+    "gulpfile.js",
+    "src",
+    "lib"
+  ],
   "dependencies": {
     "debug": "^3.1.0",
     "ws": "^4.0.0"
