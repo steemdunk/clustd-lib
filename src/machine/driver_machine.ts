@@ -37,7 +37,11 @@ export abstract class DriverMachine extends GenericMachine {
 
         const isMaster: boolean = params!.isMaster;
         assert(typeof(isMaster) === 'boolean', 'param isMaster not a boolean');
-        this.trigger(isMaster);
+        try {
+          this.trigger(isMaster);
+        } catch (e) {
+          this.logger.error('Failed to execute trigger on driver', e);
+        }
         return {};
     }
   }
