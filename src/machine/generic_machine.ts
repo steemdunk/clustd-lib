@@ -278,6 +278,7 @@ export abstract class GenericMachine extends EventEmitter {
       if (this.lastPong !== 0 && delta > (time * 2)) {
         debug('[%s] Pong delta is too great, closing connection', this.id);
         this.client.close();
+        this.client.emit('close');
         return;
       }
       this.client.ping();
