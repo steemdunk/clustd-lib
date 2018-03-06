@@ -129,28 +129,37 @@ export class Client extends EventEmitter {
     });
 
     this.socket.on('error', (err: any) => {
-      if (err.code !== 'ECONNREFUSED') {
+      if (!(err.code === 'ECONNREFUSED'
+            || err.code === 'EHOSTDOWN'
+            || err.code === 'ETIMEDOUT'
+            || err.message === 'WebSocket was closed before the connection was established')) {
         this.logger.error('Unknown client socket error', err);
       }
     });
 
     if (!this.serverSocket) {
       return new Promise<void>((resolve, reject) => {
-        const removeListeners = () => {
+        const hook = () => {
           this.socket.removeListener('open', res);
           this.socket.removeListener('error', rej);
           this.socket.removeListener('close', rej);
+          clearTimeout(timer);
         }
 
         const res = () => {
-          removeListeners();
+          hook();
           resolve();
         }
 
         const rej = (err?: any) => {
-          removeListeners();
+          hook();
+          this.socket.close();
           reject(err);
         }
+
+        const timer = setTimeout(() => {
+          rej(new Error('ETIMEDOUT'));
+        }, 3000);
 
         this.socket.once('open', res);
         this.socket.once('error', rej);
