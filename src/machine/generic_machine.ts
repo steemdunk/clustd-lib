@@ -1,5 +1,9 @@
+import {
+  DisconnectedError,
+  HandshakeRejected,
+  HsRejectStatus
+} from '../errors';
 import { Client, LocalClient } from '../client';
-import { DisconnectedError } from '../errors';
 import { EventEmitter } from 'events';
 import { Logger } from '../logger';
 import * as newDebug from 'debug';
@@ -141,7 +145,7 @@ export abstract class GenericMachine extends EventEmitter {
   }
 
   async initClient(client: Client, clientOnlyConnect = false): Promise<void> {
-    client.on('handshake_verify', data => {
+    client.on('handshake_verify', async data => {
       try {
         if (this._id) {
           // TODO allow ID renaming
@@ -156,18 +160,32 @@ export abstract class GenericMachine extends EventEmitter {
           this.host = data.remote_address;
           assert(this.host, 'handshake missing remote address');
         }
+
+        const shouldAccept = await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => {
+            reject(new Error('unable to determine handshake acceptance'));
+          }, 3000);
+          this.once('handshake_accept', success => {
+            clearTimeout(timer);
+            resolve(success);
+          });
+          this.emit('should_accept_handshake');
+        });
+
+        if (!shouldAccept) {
+          return client.emit('handshake_complete', false);
+        }
+
         this.lastPong = Date.now();
         if (this.setClient(client)) {
           this.logger.info('Successfully connected');
-          client.emit('handshake_complete');
+          client.emit('handshake_complete', true);
         } else {
           throw new Error('failed to set client');
         }
       } catch (e) {
         this.logger.error('Handshake failed:', e.message);
-        client.removeAllListeners();
-        client.close();
-        this.client = undefined;
+        client.emit('handshake_complete', false);
       }
     });
 
@@ -242,7 +260,15 @@ export abstract class GenericMachine extends EventEmitter {
             'metadata': meta.toString('base64')
           }
         }));
-        await this.initClient(client);
+        try {
+          await this.initClient(client);
+        } catch (e) {
+          if (!(e instanceof HandshakeRejected
+                && e.type === HsRejectStatus.REJECTED)) {
+            throw e;
+          }
+          return resolve();
+        }
         resolve();
         this.emit('open');
       } catch (e) {

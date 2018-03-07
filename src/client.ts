@@ -1,3 +1,4 @@
+import { HandshakeRejected, HsRejectStatus } from './errors';
 import { EventEmitter } from 'events';
 import { Logger } from './logger';
 import * as newDebug from 'debug';
@@ -56,12 +57,15 @@ export class Client extends EventEmitter {
     return new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => {
         if (!this.initialized) {
-          return reject(new Error('client handshake failed'));
+          return reject(new HandshakeRejected(HsRejectStatus.GENERIC_FAILURE));
         }
         resolve();
       }, 5000);
-      this.once('handshake_complete', () => {
+      this.once('handshake_complete', success => {
         clearTimeout(timer);
+        if (!success) {
+          return reject(new HandshakeRejected(HsRejectStatus.REJECTED));
+        }
         resolve();
       });
     });
@@ -97,9 +101,13 @@ export class Client extends EventEmitter {
           }
           this.ticket = data.hello_world;
           if (!this.serverSocket) await this.sendHello();
-          this.once('handshake_complete', async () => {
-            this.initialized = true;
-            debug('Handshake completed');
+          this.once('handshake_complete', success => {
+            if (success) {
+              this.initialized = true;
+              debug('Handshake completed');
+            } else {
+              debug('Handshake rejected');
+            }
           });
           this.emit('handshake_verify', data);
         } else if (!data.hello_world) {

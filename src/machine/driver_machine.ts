@@ -47,6 +47,9 @@ export abstract class DriverMachine extends GenericMachine {
   }
 
   async connect() {
+    this.on('should_accept_handshake', () => {
+      this.emit('handshake_accept', true);
+    });
     this.start();
     await this.scheduleConnection(0, false);
   }

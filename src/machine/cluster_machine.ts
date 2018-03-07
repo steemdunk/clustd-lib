@@ -1,6 +1,5 @@
 import { GenericMachine } from './generic_machine';
-import * as assert from 'assert';
-import { LocalClient } from '..';
+import { LocalClient } from '../client';
 
 export class ClusterMachine extends GenericMachine {
 
@@ -19,7 +18,6 @@ export class ClusterMachine extends GenericMachine {
           masterId = id;
         });
         this.emit('cluster_master_get');
-        assert(masterId, 'master ID must be present');
         return {
           master: masterId
         };
