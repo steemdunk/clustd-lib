@@ -176,18 +176,13 @@ export abstract class GenericMachine extends EventEmitter {
         const method = msg.method;
         const params = msg.params;
         try {
+          const rawRes: any = {
+            res_id: id
+          };
           const resp = await this.onRequest(method, params);
-          if (resp) {
-            await this.client!.sendMessage({
-              res_id: id,
-              data: resp
-            });
-          } else {
-            await this.client!.sendMessage({
-              res_id: id,
-              error: 'unrecognized method for this machine'
-            });
-          }
+          if (resp) rawRes.data = resp;
+          else rawRes.error = 'unrecognized method for this machine';
+          await this.client!.sendMessage(rawRes);
         } catch (e) {
           this.logger.error('Failed to process message', e);
           this.client!.sendMessage({
