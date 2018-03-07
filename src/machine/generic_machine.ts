@@ -80,7 +80,7 @@ export abstract class GenericMachine extends EventEmitter {
     clearTimeout(this.connectionTimer);
     clearTimeout(this.pingTimer);
     this.lastPong = 0;
-    for (const key of Object.keys(this.reqs)) {
+    for (const key in this.reqs) {
       const req = this.reqs[key];
       delete this.reqs[key];
       req.reject(new Error('stopped'));
@@ -105,6 +105,14 @@ export abstract class GenericMachine extends EventEmitter {
       debug('[%s] Received pong response', this.id);
     });
 
+    this.client.on('close', () => {
+      for (const key in this.reqs) {
+        const req = this.reqs[key];
+        delete this.reqs[key];
+        req.reject(new DisconnectedError('closed while waiting for response'));
+      }
+    });
+
     return true;
   }
 
@@ -115,7 +123,7 @@ export abstract class GenericMachine extends EventEmitter {
     const id = this.reqId++;
     return new Promise<any>(async (resolve, reject) => {
       const timer = setTimeout(() => {
-        request.reject(new Error('timed out'));
+        request.reject(new Error('send timed out'));
       }, 3000);
 
       const request: Request = {
@@ -226,6 +234,7 @@ export abstract class GenericMachine extends EventEmitter {
       if (this.client) {
         this.logger.warn('Connection lost');
         const serverSocket = this.client.serverSocket;
+        this.client.removeAllListeners();
         this.client = undefined;
         this.emit('close');
         if (!clientOnlyConnect
