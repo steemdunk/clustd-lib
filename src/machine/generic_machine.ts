@@ -1,6 +1,7 @@
+import { Client, LocalClient } from '../client';
+import { DisconnectedError } from '../errors';
 import { EventEmitter } from 'events';
 import { Logger } from '../logger';
-import { Client, LocalClient } from '../client';
 import * as newDebug from 'debug';
 import * as assert from 'assert';
 import * as WebSocket from 'ws';
@@ -105,7 +106,7 @@ export abstract class GenericMachine extends EventEmitter {
 
   async send(method: string, params?: any) {
     if (!this.open) {
-      throw new Error('disconnected');
+      throw new DisconnectedError();
     }
     const id = this.reqId++;
     return new Promise<any>(async (resolve, reject) => {
