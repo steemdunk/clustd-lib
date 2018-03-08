@@ -27,8 +27,8 @@ export abstract class GenericMachine extends EventEmitter {
     return `[${this.id ? this.id : this.host} (${this.globalId})] ${msg}`;
   });
 
-  protected client?: Client;
-  private globalId: number = globalId++;
+  client?: Client;
+  readonly globalId: number = globalId++;
   private _id?: string;
   private _active: boolean;
   private reqId: number = 0;
@@ -64,12 +64,14 @@ export abstract class GenericMachine extends EventEmitter {
 
   start(): void {
     if (this.active || this.local) return;
+    debug(`Started machine (global id: ${this.globalId}, id: ${this.id})`);
     this._active = true;
     this.schedulePing();
   }
 
   stop() {
     if (this.local) return;
+    debug(`Stopped machine (global id: ${this.globalId}, id: ${this.id})`);
     this._active = false;
     if (this.client) {
       this.client.removeAllListeners();
